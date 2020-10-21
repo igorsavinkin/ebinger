@@ -8,7 +8,8 @@ log.setLevel(log.LEVELS.DEBUG);
 
 const queue_name ='ebinger';
 const base_url = 'https://www.ebinger-gmbh.com/';
- 
+//var navigations =[];
+var product_counter = 0;
 
 // Apify.main() function wraps the crawler logic (it is optional).
 Apify.main(async () => {
@@ -47,7 +48,7 @@ Apify.main(async () => {
         handlePageTimeoutSecs: 30,
 
         // Limit to 10 requests per one crawl
-        maxRequestsPerCrawl: 10,
+        maxRequestsPerCrawl: 100000,
 
         // This function will be called for each URL to crawl.
         // It accepts a single parameter, which is an object with options as:
@@ -58,22 +59,48 @@ Apify.main(async () => {
         handlePageFunction: async ({ request, $ }) => {
             log.debug(`Processing ${request.url}...`);
 
+			// detail page or category page ?
+			if (request.url.includes("/id-") ){
+				// detail page process
+				
+				
+				
+				// Store the results to the default dataset. In local configuration,
+				// the data will be stored as JSON files in ./apify_storage/datasets/default
+				await Apify.pushData({
+					url: request.url
+					//, title
+				});
+			} else {
+				// category page				
+				
+				// add navigation links into requestQueue
+				$('.link').each((index, el) => { 
+					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() }); 				
+					console.log('added into requestQueue ', $(el).attr('href'));
+				});
+				var product=[];
+				// get product pages
+				$('h2 a').each((index, el) => {
+					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() });
+					product_counter+=1;		 
+				});
+				
+				//console.log('category url:', request.url);
+				log.info("Total products: " , product_counter );
+				//process.exit();
+			}
             // Extract data from the page using cheerio.
-            const title = $('title').text();
+            /*const title = $('title').text();
             const h1texts = [];
             $('h1').each((index, el) => {
                 h1texts.push({
                     text: $(el).text(),
                 });
-            });
+            });*/
+			
 
-            // Store the results to the default dataset. In local configuration,
-            // the data will be stored as JSON files in ./apify_storage/datasets/default
-            await Apify.pushData({
-                url: request.url,
-                title,
-                h1texts,
-            });
+            
         },
 
         // This function is called if the page processing failed more than maxRequestRetries+1 times.
@@ -86,4 +113,6 @@ Apify.main(async () => {
     await crawler.run();
 
     log.debug('Crawler finished.');
+	//console.log('navigations:');
+	//console.log(navigations);
 });
