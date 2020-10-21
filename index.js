@@ -61,15 +61,21 @@ Apify.main(async () => {
 
 			// detail page or category page ?
 			if (request.url.includes("/id-") ){
-				// detail page process
+				// detail page process 
 				
-				
+				// get image links
+				// get product pages 
+				var images=[];
+				$('div.thumbnails figure.image_container a').each((index, el) => { 	
+					//log.info($(el).attr('href').trim());
+					images.push(base_url + $(el).attr('href').trim());
+				});
 				
 				// Store the results to the default dataset. In local configuration,
 				// the data will be stored as JSON files in ./apify_storage/datasets/default
 				await Apify.pushData({
 					url: request.url
-					//, title
+					, images: images
 				});
 			} else {
 				// category page				
@@ -78,26 +84,14 @@ Apify.main(async () => {
 				$('.link').each((index, el) => { 
 					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() }); 				
 					console.log('added into requestQueue ', $(el).attr('href'));
-				});
-				var product=[];
+				}); 
 				// get product pages
 				$('h2 a').each((index, el) => {
 					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() });
-					product_counter+=1;		 
-				});
-				
-				//console.log('category url:', request.url);
-				log.info("Total products: " , product_counter );
+					product_counter += 1;		 
+				});  
 				//process.exit();
-			}
-            // Extract data from the page using cheerio.
-            /*const title = $('title').text();
-            const h1texts = [];
-            $('h1').each((index, el) => {
-                h1texts.push({
-                    text: $(el).text(),
-                });
-            });*/
+			} 
 			
 
             
