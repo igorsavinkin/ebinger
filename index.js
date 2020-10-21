@@ -8,17 +8,17 @@ log.setLevel(log.LEVELS.DEBUG);
 
 const queue_name ='ebinger';
 const base_url = 'https://www.ebinger-gmbh.com/';
-//var navigations =[];
-var product_counter = 0;
+
 
 // Apify.main() function wraps the crawler logic (it is optional).
 Apify.main(async () => {
-    // Create an instance of the RequestList class that contains a list of URLs to crawl.
+    // Open a named dataset
+	const dataset = await Apify.openDataset('data2');
+	
     // Add URLs to a RequestList
 	const requestQueue = await Apify.openRequestQueue(queue_name);
 	const lineReader = require('line-reader');
-	lineReader.eachLine('categories.txt', async function(line) {
-		//console.log('adding ', line);
+	lineReader.eachLine('categories.txt', async function(line) { 
 		let url = base_url + line.trim(); 
 		await requestQueue.addRequest({ url: url });
 	}); 
@@ -45,7 +45,7 @@ Apify.main(async () => {
         maxRequestRetries: 1,
 
         // Increase the timeout for processing of each page.
-        handlePageTimeoutSecs: 30,
+        handlePageTimeoutSecs: 50,
 
         // Limit to 10 requests per one crawl
         maxRequestsPerCrawl: 100000,
@@ -61,21 +61,28 @@ Apify.main(async () => {
 
 			// detail page or category page ?
 			if (request.url.includes("/id-") ){
-				// detail page process 
+				// product page process 
 				
-				// get image links
-				// get product pages 
+				// get image links  
 				var images=[];
-				$('div.thumbnails figure.image_container a').each((index, el) => { 	
-					//log.info($(el).attr('href').trim());
+				$('div.thumbnails figure.image_container a').each((index, el) => { 	 
 					images.push(base_url + $(el).attr('href').trim());
 				});
-				
+				 
+				 
 				// Store the results to the default dataset. In local configuration,
 				// the data will be stored as JSON files in ./apify_storage/datasets/default
-				await Apify.pushData({
+				await dataset.pushData({
 					url: request.url
 					, images: images
+					, name: $('div.details h1').text()
+					, sku: $('div.details div.sku').text() 
+					, weight: $('div.details div.weight').text() 
+					, short_descr: $('div.details div.teaser').text()
+					, description: $('div.details div.description').text().replace(/[\n\t\r]/g," ")
+					, price: $('div.details div.price div.sum').text().replace(/[\n\t\r]/g," ")
+					, info: $('div.details div.price div.info').text().replace(/[\n\t\r]/g," ")
+					, delivery_time: $('div.price div:nth-of-type(3)').text()			
 				});
 			} else {
 				// category page				
@@ -87,14 +94,9 @@ Apify.main(async () => {
 				}); 
 				// get product pages
 				$('h2 a').each((index, el) => {
-					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() });
-					product_counter += 1;		 
+					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() }); 		 
 				});  
-				//process.exit();
 			} 
-			
-
-            
         },
 
         // This function is called if the page processing failed more than maxRequestRetries+1 times.
@@ -106,7 +108,5 @@ Apify.main(async () => {
     // Run the crawler and wait for it to finish.
     await crawler.run();
 
-    log.debug('Crawler finished.');
-	//console.log('navigations:');
-	//console.log(navigations);
+    log.debug('Crawler finished.'); 
 });
