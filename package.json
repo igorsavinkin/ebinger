@@ -7,11 +7,16 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "index.js"
   },
-  "keywords": [],
+  "repository": {
+	  "type" : "git",
+	  "url" : "https://github.com/igorsavinkin/ebinger.git"
+	},
+  "keywords": ["scraper", "crawler", "web scraping"],
   "author": "Igor Savinkin",
   "license": "ISC",
   "dependencies": {
     "apify": "^0.21.8",
+    "csv-writer": "^1.6.0",
     "line-reader": "^0.4.0"
   }
 }

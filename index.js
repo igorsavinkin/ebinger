@@ -1,4 +1,20 @@
 const Apify = require('apify');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const csvWriter = createCsvWriter({
+  path: 'out.csv',
+  header: [
+    {id: 'name', title: 'Name'},
+    {id: 'url', title: 'Link'},
+    {id: 'sku', title: 'Artikel'},
+    {id: 'weight', title: 'Versandgewicht'},
+	{id: 'short_descr', title: 'Kurz beschreibung'},
+	{id: 'beschreibung', title: 'Beschreibung'},
+    {id: 'price', title: 'Preise'},
+	{id: 'info', title: 'Info'},
+    {id: 'delivery_time', title: 'Lieferzeit'},
+  ]
+});
+var total_data =[];
 
 // Apify.utils contains various utilities, e.g. for logging.
 // Here we use debug level of logging to improve the debugging experience.
@@ -13,8 +29,10 @@ const base_url = 'https://www.ebinger-gmbh.com/';
 // Apify.main() function wraps the crawler logic (it is optional).
 Apify.main(async () => {
     // Open a named dataset
-	const dataset = await Apify.openDataset('data2');
-	
+	var dataset = await Apify.openDataset('dataset_2');
+	/* await dataset.pushData({
+					url: 'something'
+	}); */
     // Add URLs to a RequestList
 	const requestQueue = await Apify.openRequestQueue(queue_name);
 	const lineReader = require('line-reader');
@@ -42,13 +60,13 @@ Apify.main(async () => {
         maxConcurrency: 50,
 
         // On error, retry each page at most once.
-        maxRequestRetries: 1,
+        maxRequestRetries: 3,
 
         // Increase the timeout for processing of each page.
         handlePageTimeoutSecs: 50,
 
         // Limit to 10 requests per one crawl
-        maxRequestsPerCrawl: 100000,
+        maxRequestsPerCrawl: 220,
 
         // This function will be called for each URL to crawl.
         // It accepts a single parameter, which is an object with options as:
@@ -72,24 +90,26 @@ Apify.main(async () => {
 				 
 				// Store the results to the default dataset. In local configuration,
 				// the data will be stored as JSON files in ./apify_storage/datasets/default
-				await dataset.pushData({
+				let item = {
 					url: request.url
 					, images: images
 					, name: $('div.details h1').text()
-					, sku: $('div.details div.sku').text() 
-					, weight: $('div.details div.weight').text() 
+					, sku: $('div.details div.sku').text().split(' ')[1] 
+					, weight: $('div.details div.weight').text().split('Versandgewicht:')[1].trim()
 					, short_descr: $('div.details div.teaser').text()
-					, description: $('div.details div.description').text().replace(/[\n\t\r]/g," ")
-					, price: $('div.details div.price div.sum').text().replace(/[\n\t\r]/g," ")
-					, info: $('div.details div.price div.info').text().replace(/[\n\t\r]/g," ")
-					, delivery_time: $('div.price div:nth-of-type(3)').text()			
-				});
+					, description: $('div.details div.description').text().replace(/[\n\t\r]/g," ").replace(/\s+/g," ").split('Beschreibung')[1].trim()
+					, price: $('div.details div.price div.sum').text().replace(/[\n\t\r]/g," ").replace(/\s+/g," ").trim()
+					, info: $('div.details div.price div.info').text().replace(/[\n\t\r]/g," ").replace(/\s+/g," ").trim()
+					, delivery_time: $('div.price div:nth-of-type(3)').text().split('Lieferzeit:')[1].trim()			
+				};
+				await dataset.pushData(item);
+				total_data.push(item);
 			} else {
 				// category page				
 				
 				// add navigation links into requestQueue
 				$('.link').each((index, el) => { 
-					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() }); 				
+					requestQueue.addRequest({ url: base_url + $(el).attr('href').trim() , forefront: true }); 				
 					console.log('added into requestQueue ', $(el).attr('href'));
 				}); 
 				// get product pages
@@ -109,4 +129,13 @@ Apify.main(async () => {
     await crawler.run();
 
     log.debug('Crawler finished.'); 
-});
+	console.log('total_data:', total_data);
+	try {
+		for (const element of total_data) {
+		  console.log(element);
+		}
+		   
+	} catch (err) { 
+		log.error(err);
+	} 
+});	 
