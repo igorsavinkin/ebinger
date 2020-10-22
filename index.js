@@ -2,16 +2,18 @@ const Apify = require('apify');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
   path: 'out.csv',
+  fieldDelimiter : ';',
   header: [
     {id: 'name', title: 'Name'},
-    {id: 'url', title: 'Link'},
+    {id: 'url', title: 'Web Link'},
     {id: 'sku', title: 'Artikel'},
     {id: 'weight', title: 'Versandgewicht'},
 	{id: 'short_descr', title: 'Kurz beschreibung'},
-	{id: 'beschreibung', title: 'Beschreibung'},
+	{id: 'description', title: 'Beschreibung'},
     {id: 'price', title: 'Preise'},
-	{id: 'info', title: 'Info'},
+	{id: 'info', title: 'Preise Info'},
     {id: 'delivery_time', title: 'Lieferzeit'},
+    {id: 'images', title: 'Bilder'},
   ]
 });
 var total_data =[];
@@ -66,7 +68,7 @@ Apify.main(async () => {
         handlePageTimeoutSecs: 50,
 
         // Limit to 10 requests per one crawl
-        maxRequestsPerCrawl: 220,
+        maxRequestsPerCrawl: 320,
 
         // This function will be called for each URL to crawl.
         // It accepts a single parameter, which is an object with options as:
@@ -129,13 +131,21 @@ Apify.main(async () => {
     await crawler.run();
 
     log.debug('Crawler finished.'); 
-	console.log('total_data:', total_data);
+	//console.log('total_data:', total_data);
 	try {
-		for (const element of total_data) {
-		  console.log(element);
-		}
-		   
+		//for (const element of total_data) {
+		  console.log(total_data[0]);
+		//}
 	} catch (err) { 
 		log.error(err);
 	} 
-});	 
+	if ( total_data) {
+		await csvWriter.writeRecords(total_data)
+		  .then(()=> console.log('The CSV file was written successfully'))
+		  .catch( (error) => console.log(error)); 
+	} else {
+		log.debug("No data at this run");
+	}
+	
+});	
+
