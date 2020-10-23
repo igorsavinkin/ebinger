@@ -31,7 +31,7 @@ const base_url = 'https://www.ebinger-gmbh.com/';
 // Apify.main() function wraps the crawler logic (it is optional).
 Apify.main(async () => {
     // Open a named dataset
-	var dataset = await Apify.openDataset('dataset_2');
+	var dataset = await Apify.openDataset('dataset_3');
 	/* await dataset.pushData({
 					url: 'something'
 	}); */
@@ -68,7 +68,7 @@ Apify.main(async () => {
         handlePageTimeoutSecs: 50,
 
         // Limit to 10 requests per one crawl
-        maxRequestsPerCrawl: 320,
+        maxRequestsPerCrawl: 600000,
 
         // This function will be called for each URL to crawl.
         // It accepts a single parameter, which is an object with options as:
@@ -77,12 +77,12 @@ Apify.main(async () => {
         // - request: an instance of the Request class with information such as URL and HTTP method
         // - $: the cheerio object containing parsed HTML
         handlePageFunction: async ({ request, $ }) => {
-            log.debug(`Processing ${request.url}...`);
+            
 
 			// detail page or category page ?
 			if (request.url.includes("/id-") ){
 				// product page process 
-				
+				log.debug(`Processing product page ${request.url}...`);
 				// get image links  
 				var images=[];
 				$('div.thumbnails figure.image_container a').each((index, el) => { 	 
@@ -139,12 +139,12 @@ Apify.main(async () => {
 	} catch (err) { 
 		log.error(err);
 	} 
-	if ( total_data) {
+	if (total_data) {
 		await csvWriter.writeRecords(total_data)
 		  .then(()=> console.log('The CSV file was written successfully'))
 		  .catch( (error) => console.log(error)); 
 	} else {
-		log.debug("No data at this run");
+		log.debug("No data at this run.");
 	}
 	
 });	
