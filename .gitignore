@@ -2,4 +2,4 @@ apify_storage
 node_modules
 *.bak
 *.txt
-*.csv
+

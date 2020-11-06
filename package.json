@@ -8,14 +8,18 @@
     "start": "index.js"
   },
   "repository": {
-	  "type" : "git",
-	  "url" : "https://github.com/igorsavinkin/ebinger.git"
-	},
-  "keywords": ["scraper", "crawler", "web scraping"],
+    "type": "git",
+    "url": "https://github.com/igorsavinkin/ebinger.git"
+  },
+  "keywords": [
+    "scraper",
+    "crawler",
+    "web scraping"
+  ],
   "author": "Igor Savinkin",
   "license": "ISC",
   "dependencies": {
-    "apify": "^0.21.8",
+    "apify": "^0.21.9",
     "csv-writer": "^1.6.0",
     "line-reader": "^0.4.0"
   }
